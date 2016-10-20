@@ -1,0 +1,19 @@
+# General default params, used as defaults for the settlegas and and settledust
+# portions of IC generation
+# Filenames
+achInFile                = settledust.std # Initial conditions
+achOutName               = settledust     # file prefix
+
+# flags for dust
+bFastGas                 = 1   # fastGas is not implemented for dust, but should work
+dDustParam1              = 1.  # grain size
+dDustParam2              = 1.  # grain density
+dDustParam3              = 3.5
+dDustParam4              = 1   # Do Dust parameter
+
+# Time stepping parameters
+iOutInterval             = 40
+nSteps                   = 4000
+dDelta                   = 0.5e-2
+iLogInterval             = 1
+iCheckInterval           = 500

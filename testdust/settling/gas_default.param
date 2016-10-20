@@ -1,0 +1,45 @@
+# Param defaults for the settlegas and settledust portions of generation
+# User defined defaults should go in gas_user_default.param
+# Patch potential parameters
+bPatch          = 1
+dOrbDist        = 5.0
+dCentMass       = 1.0
+
+# Period box parameters
+nReplicas       = 1
+bPeriodic       = 1
+
+# Filenames
+achInFile                = settlegas.std # Initial conditions
+achOutName               = settlegas     # file prefix
+
+# flags for dust
+dDustParam4              = 0   # dust flag
+# Units
+dMeanMolWeight           = 1
+
+# Time stepping parameters
+iLogInterval             = 1
+
+# Flags for SPH + grav
+dGasConst                = 1.   # This forces gas constant R=1, so cs=T=1 is possible
+bDoGravity               = 0    # For this test, do not calculate self-gravity
+bDoDensity               = 0
+bDoGas                   = 1
+bGasAdiabatic            = 0
+bGasIsothermal           = 1
+bVDetails                = 1
+
+dConstAlpha              = 20
+dConstBeta               = 2
+
+# Basic parameters
+dConstGamma              = 1.4
+dEta                     = 0.2
+dEtaCourant              = 0.3
+dExtraStore              = 0.5
+dFracFastGas             = 0.1
+dTheta                   = 0.7
+iMaxRung                 = 30
+
+

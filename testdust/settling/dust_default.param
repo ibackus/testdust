@@ -1,0 +1,18 @@
+# Param defaults for the final portion of IC generation
+# User defined defaults should go in dust_user_default.param
+# Filenames
+achInFile                = settledust.std # Initial conditions
+achOutName               = settledust     # file prefix
+
+# flags for dust
+bFastGas                 = 1   # fastGas is not implemented for dust, but should work
+dDustParam4              = 1   # Do Dust parameter
+
+# Time stepping parameters
+iLogInterval             = 1
+iOutInterval             = 100
+
+# SPH
+dConstAlpha              = 1
+dConstBeta               = 2
+nSmooth 		 = 151

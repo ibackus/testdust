@@ -1,0 +1,6 @@
+# User defined defaults should go here for generating the .param file for the
+# gas settling portion of IC generation
+# General default params, used as defaults for the settlegas and and settledust
+# portions of IC generation
+# Param defaults for the settlegas and settledust portions of generation
+
