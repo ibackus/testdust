@@ -24,7 +24,7 @@ import testdust
 import os
 
 # -----------------------------------
-## Generate a glass
+## Generate a glass 
 #savedir = 'price_laibe_glass'
 #settingsfile = 'price_laibe_glass.py'
 # OR use a cubic grid
