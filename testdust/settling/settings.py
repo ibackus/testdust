@@ -4,8 +4,10 @@ This file contains settings required to make ICs for the dust settling test
 of Price & Laibe (2015) (see section 4.4 Dust settling in a protoplanetary disc)
 """
 initialFileName = 'glass.std'
-#nParticles = 64*228*64
-nParticles = 350
+boxres = [8, 8, 29]
+#boxres = [64, 228, 64]
+#nParticles = 1792
+nParticles = boxres[0] * boxres[1] * boxres[2]
 boxwidth = 0.5
 changaPreset = 'default'
 verbose = False

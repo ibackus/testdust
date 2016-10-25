@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 """
+This module contains utilities useful for the dust settling test
+
 Created on Wed Oct 19 16:11:02 2016
 
 @author: ibackus
 """
 import os
+from scipy.interpolate import interp1d
+from scipy.special import erf
+import numpy as np
 
 import testdust
 from testdust.utils import loadDefaultParam as _loadDefaultParam
@@ -71,3 +76,65 @@ def defaultFilenames(step):
         infile, fprefix = testdust.utils.filenamesFromParam(parDict)
     paramname = fprefix + '.param'
     return infile, paramname, fprefix
+
+def makeInvErf(zmax=30, npts=1e5):
+    """
+    Generates an inverse error function by making a linear interpolation of
+    z vs error.  The error function here is scipy.special.erf
+    
+    Parameters
+    ----------
+    zmax : int
+        Maximum z to for erf(z) to consider.
+    npts : int
+        Number of points to use for generating the interpolation spline
+    
+    Returns
+    -------
+    invErf(m) : function
+        Inverse of the error function, for 0 <= m <= 1
+    """
+    npts = int(npts)
+    z = np.linspace(0, zmax, npts)
+    y = erf(z)
+    y[-1] = 1
+    return interp1d(y, z)
+
+def gaussianGrid(nz=50):
+    """
+    Generate a set of montonically increasing points to create a gaussian
+    density profile for SPH.
+    
+    If you have particles of equal mass, placing the particles at these points
+    will create a density profile that decays as exp(-z**2/2).  This gives a 
+    standard deviation of 1.
+    
+    Parameters
+    ----------
+    nz : int
+        Number of points to make
+    
+    Returns
+    -------
+    z : array
+        Numpy array of points, z >= 0
+    """
+    erfInv = makeInvErf()
+    m = np.linspace(0, 1, nz+1)[0:-1]
+    z = erfInv(m)
+    z *= np.sqrt(2)
+    return z
+    
+def _estRho(z):
+    """
+    Estimate density for equal mass particles on a line (up to normalization)
+    """
+    dz = np.gradient(z, edge_order=2)
+    rho = 1.0/dz
+    rho /= rho[0]
+    return rho
+    
+def _rhoExpected(z):
+    """
+    """
+    return np.exp(-z**2)

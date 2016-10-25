@@ -1,5 +1,24 @@
 # -*- coding: utf-8 -*-
 """
+This module contains functions and classes for generating initial conditions
+for the dust settling test of Price & Laibe (2015) (see section 4.4 Dust 
+settling in a protoplanetary disc)
+
+The ICs are meant to mimic the vertically-stratified profile of a section of
+a protoplanetary disk at some distance R from the star.  
+
+The ICs are in a periodic box which is very extended in z to mimic open
+boundary conditions along z.  The box is much longer along z than x-y.  The
+vertical density profile is a gaussian of:
+    rho(z) = rho0 * exp(-z^2/2 H^2)
+
+IC generation is handled by the IC class.  There are 3 steps in IC generation:
+    1)  Generate initial, starting point ICs.  This can a uniform SPH glass,
+        or a grid, etc...
+    2)  Gas settling.  Before adding dust, the ICs are run to allow them to
+        settle into an equilibrium state.  velocities are zeroed out
+    3)  Set-up dust parameters
+
 NOTES:
 
 It is important to time evolve the gas settling enough time.  It can appear to
@@ -27,15 +46,14 @@ Created on Thu Jul 21 14:06:57 2016
 """
 from pprint import pformat
 import numpy as np
-import matplotlib.pyplot as plt
-import os
-import glob
 import shutil
-import json
+import itertools
+
 import pynbody
 SimArray = pynbody.array.SimArray
+
 import diskpy
-import sphglass
+
 from diskpy.ICgen.ICgen_utils import changa_command, changa_run
 
 import testdust
@@ -61,9 +79,15 @@ class IC():
     >>> import testdust
     >>> IC = testdust.settling.makeICs.IC('settings.py')
     
-    To use a glass as a starting point:
+    There are 2 ways to generate the initial snapshot.  You can call
+    makeInitialSnap (which is wrapper) or call one the makexxx functions:
     
+    >>> # Use whatever is specified by settings.py
+    >>> IC.makeInitialSnap()
+    >>> # OR make a glass
     >>> IC.makeGlass()
+    >>> # OR make a 'cubic' grid
+    >>> IC.makeGrid()
     
     To use a snapshot of your own as a starting point, you can just set 
     initialFileName in settings.py . Or (not recommended) you can set
@@ -98,6 +122,8 @@ class IC():
         
     def readSettings(self, settingsFileName=None):
         """
+        Parses the pythonic settings in settingsFileName 
+        See testdust.utils.parsePySettings
         """
         if settingsFileName is not None:
             
@@ -108,6 +134,7 @@ class IC():
         
     def initCalc(self):
         """
+        Perform initial calculations/derivations from the settings
         """
         x = self.settings
         H, cs, smooth, boxshape, dDelta = initCalc(x['hOverR'], x['R0'], \
@@ -115,16 +142,45 @@ class IC():
         self.settings.update({'H':H, 'cs': cs, 'smooth': smooth, 'boxshape': boxshape,
                         'dDelta': dDelta})
         
+    def makeInitialSnap(self):
+        """
+        Generate a starting-point, initial snapshot.  A wrapper function
+        """
+        kind = self.settings['initialSnapKind'].lower()
+        if kind == 'cubic':
+            print 'Making cubic ICs'
+            self.makeGrid()
+        elif kind == 'glass':
+            print 'making glass'
+            self.makeGlass()
+        else:
+            raise ValueError, "Unrecognized initial snapshot kind {0}"\
+                .format(kind)
+        
     def makeGlass(self):
         """
+        Generate a glass starting point, initial snapshot using 
+        makeICs.makeGlass()
+        
+        Also depends on sphglass
         """
         x = self.settings
-        output = makeGlass(x['nParticles'], x['boxshape'], x['changaPreset'], 
+        snap = makeGlass(x['nParticles'], x['boxshape'], x['changaPreset'], 
                          x['initialFileName'], x['verbose'])
-        return output
+        return snap
+        
+    def makeGrid(self):
+        """
+        Generate a cubic 'grid' as a starting point, initial snapshot
+        """
+        x = self.settings
+        snap = makeGrid(x['boxres'], x['boxshape'], x['H'], x['initialFileName'])
+        return snap
         
     def setupGas(self):
         """
+        Set-up the snapshot and .param file used to perform the gas settling.
+        See settleGas()
         """
         x = self.settings
         setupGas(x['initialFileName'], x['H'], x['cs'], x['dDelta'], \
@@ -132,6 +188,9 @@ class IC():
             
     def settleGas(self, changaPreset=None, nRuns=None):
         """
+        Perform the gas settling portion of the IC generation.  During this
+        stage the ICs are time evolved with just gas  (no dust) to allow them
+        to settle to an equilibrium position
         """
         x = self.settings
         if changaPreset is None:
@@ -144,6 +203,10 @@ class IC():
         
     def setupDust(self):
         """
+        Set up the dust ICs
+        
+        After running settleGas(), the dust parameters can be set-up and 
+        the final IC generation completed.
         """
         x = self.settings
         output = setupDust(x['dustSize'], x['intrinsicDustRho'], x['rho0'], \
@@ -158,9 +221,54 @@ def makeGlass(nParticles, boxshape, changaPreset='default',
     This is basically just a wrapper for sphglass, but saves the output to
     glassName
     """
+    import sphglass
     glass = sphglass.glassBox(nParticles, boxshape, changaPreset, verbose)
     shutil.move('glass.std', glassName)
-    return 
+    return glass
+    
+def cubicGrid(boxres, boxshape, H):
+    """
+    Generates a grid of positions with a gaussian density profile along the 
+    z-axis
+    """
+    nx, ny, nz = boxres
+    if len(boxres) != 3:
+        raise ValueError, 'boxres must be len(3)'
+    if nz % 2 == 0:
+        raise ValueError, "number of z particles must be odd (for symmetry)"
+    x = testdust.utils.periodicLine(nx) * boxshape[0]
+    y = testdust.utils.periodicLine(ny) * boxshape[1]
+    # Generate z for z>0
+    nzTop = (nz + 1)/2
+    zTop = utils.gaussianGrid(nzTop) * H
+    z = np.zeros(nz)
+    # Copy into z for positve and negative sides
+    z[nzTop-1:] = zTop
+    z[0:nzTop] = -zTop[-1::-1]
+    # Now make grid out of them
+    grid = np.array([a for a in itertools.product(x, y, z)])
+    
+    return grid
+    
+def makeGrid(boxres, boxshape, H, savename):
+    """
+    Generate a tipsy snapshot of gas particles on a grid with an gaussian
+    density profile along the z-axis
+    """
+    nParticles = np.product(boxres)
+    # Set up snapshot defaults
+    f = pynbody.snapshot.new(gas=nParticles)
+    f['mass'] = 1.
+    f['temp'] = 1.
+    f['vel'] = 0.
+    f['eps'] = 1.
+    f['rho'] = 0.
+    # Generate particle positions
+    f['pos'] = cubicGrid(boxres, boxshape, H)
+    # Now save
+    f.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
+    print 'snapshot saved to:', savename
+    return f
 
 def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
              nSoundCross=4, nSmooth=None):

@@ -8,7 +8,33 @@ import diskpy
 import glob
 import os
 import shutil
+import numpy as np
 from types import ModuleType
+
+def gridSize(nParticles, boxshape):
+    """
+    Makes n-dimensional grid dimensions that will place approximately nParticles
+    on an evenly spaced grid of boxshape.  Due to rounding, the number of
+    actual particles may be different than nParticles
+    """
+    volume = float(np.product(boxshape))
+    dx = volume**(1./3)
+    boxres = []
+    for L in boxshape:
+        res = int(np.round(L/dx))
+        boxres.append(res)
+    
+    return np.asarray(boxres, dtype=int)
+    
+def periodicLine(n):
+    """
+    Places n points on a line length=1, centered at the origin, and periodic
+    around x = +/-0.5
+    """
+    x = np.linspace(-0.5, 0.5, n+1)[0:-1]
+    dx = x[1] - x[0]
+    x += 0.5 * dx
+    return x
 
 def parsePySettings(filename):
     """
