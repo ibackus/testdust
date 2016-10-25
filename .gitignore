@@ -1,3 +1,7 @@
+# Project specific ignores
+examples/settling/**
+!examples/settling/README.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
