@@ -451,20 +451,3 @@ def initCalc(hOverR, R0, boxwidth, nParticles, nSmooth=32):
     dDelta = tCourant
     
     return H, cs, smooth, boxshape, dDelta
-
-if __name__ == '__main__':
-    
-    pass
-#    
-#    if do_compare:
-#        
-#        # Expected values
-#        z = np.linspace(-5*H, 5*H, 1000)
-#        expected = rho0 * np.exp(-z**2/(2*H**2))
-#        
-#        fname = 'settledust.std'
-#        f = pynbody.load(fname)
-#        
-#        plt.plot(f['z'], f['rho'],',', z, expected, 'r')
-#        plt.legend(['actual', 'expected'])
-#        plt.show()
