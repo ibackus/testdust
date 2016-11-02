@@ -418,9 +418,12 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
         # For some reason it helps to access some quantities first to make sure
         # they get loaded
         dustSnap['pos']
-        dustSnap['vel']
+        # Also, just to be safe, set velocities to zero
+        dustSnap['vel'] = 0.
         dustSnap.write(filename=savename)
     except ValueError:
+        # Also, just to be safe, set velocities to zero
+        dustSnap['vel'] = 0.
         dustSnap.write(filename=savename)
     print 'snapshot saved to:', savename
     
