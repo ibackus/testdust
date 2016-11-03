@@ -12,6 +12,6 @@ if [ -d "examples/" ]; then
 fi
 # Copy examples
 rsync -avI src/examples/ examples/
-rm examples/README.md
+#rm examples/README.md
 echo "Success.  See examples in examples/ folder"
 

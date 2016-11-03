@@ -58,6 +58,7 @@ from diskpy.ICgen.ICgen_utils import changa_command, changa_run
 
 import testdust
 import utils
+import ppdgrid
 
 class IC():
     """
@@ -149,15 +150,15 @@ class IC():
         kind = self.settings['initialSnapKind'].lower()
         if kind == 'cubic':
             print 'Making cubic ICs'
-            self.makeGrid()
+            self._makeGrid()
         elif kind == 'glass':
             print 'making glass'
-            self.makeGlass()
+            self._makeGlass()
         else:
             raise ValueError, "Unrecognized initial snapshot kind {0}"\
                 .format(kind)
         
-    def makeGlass(self):
+    def _makeGlass(self):
         """
         Generate a glass starting point, initial snapshot using 
         makeICs.makeGlass()
@@ -169,12 +170,13 @@ class IC():
                          x['initialFileName'], x['verbose'])
         return snap
         
-    def makeGrid(self):
+    def _makeGrid(self):
         """
         Generate a cubic 'grid' as a starting point, initial snapshot
         """
         x = self.settings
-        snap = makeGrid(x['boxres'], x['boxshape'], x['H'], x['initialFileName'])
+        snap = makeGrid(x['boxres'], x['boxshape'], x['H'], x['R0'], \
+            x['initialFileName'], x['dustFrac'], x['rho0'])
         return snap
         
     def setupGas(self):
@@ -183,8 +185,16 @@ class IC():
         See settleGas()
         """
         x = self.settings
+        updateMass = True
+#        kind = x['initialSnapKind'].lower()
+#        if kind == 'cubic':
+#            updateMass = False
+#        else:
+#            updateMass = True
+            
         setupGas(x['initialFileName'], x['H'], x['cs'], x['dDelta'], \
-            x['boxshape'], x['rho0'], x['smooth'], x['nSoundCross'], x['nSmooth'])
+            x['boxshape'], x['rho0'], x['smooth'], x['nSoundCross'], \
+            x['nSmooth'], updateMass)
             
     def settleGas(self, changaPreset=None, nRuns=None):
         """
@@ -226,7 +236,7 @@ def makeGlass(nParticles, boxshape, changaPreset='default',
     shutil.move('glass.std', glassName)
     return glass
     
-def cubicGrid(boxres, boxshape, H):
+def cubicGrid(boxres, boxshape, H, R0, eps=0.):
     """
     Generates a grid of positions with a gaussian density profile along the 
     z-axis
@@ -234,23 +244,18 @@ def cubicGrid(boxres, boxshape, H):
     nx, ny, nz = boxres
     if len(boxres) != 3:
         raise ValueError, 'boxres must be len(3)'
-    if nz % 2 == 0:
-        raise ValueError, "number of z particles must be odd (for symmetry)"
+#    if nz % 2 == 0:
+#        raise ValueError, "number of z particles must be odd (for symmetry)"
     x = testdust.utils.periodicLine(nx) * boxshape[0]
     y = testdust.utils.periodicLine(ny) * boxshape[1]
-    # Generate z for z>0
-    nzTop = (nz + 1)/2
-    zTop = utils.gaussianGrid(nzTop) * H
-    z = np.zeros(nz)
-    # Copy into z for positve and negative sides
-    z[nzTop-1:] = zTop
-    z[0:nzTop] = -zTop[-1::-1]
+    z = ppdgrid.posGen(nz, H, R0, eps)
+    mScale = ppdgrid.particleMass(z, rho0=1.)
     # Now make grid out of them
     grid = np.array([a for a in itertools.product(x, y, z)])
     
-    return grid
+    return grid, mScale
     
-def makeGrid(boxres, boxshape, H, savename):
+def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1.):
     """
     Generate a tipsy snapshot of gas particles on a grid with an gaussian
     density profile along the z-axis
@@ -258,20 +263,21 @@ def makeGrid(boxres, boxshape, H, savename):
     nParticles = np.product(boxres)
     # Set up snapshot defaults
     f = pynbody.snapshot.new(gas=nParticles)
-    f['mass'] = 1.
     f['temp'] = 1.
     f['vel'] = 0.
     f['eps'] = 1.
     f['rho'] = 0.
     # Generate particle positions
-    f['pos'] = cubicGrid(boxres, boxshape, H)
+    pos, mScale = cubicGrid(boxres, boxshape, H, R0, eps)
+    f['pos'] = pos
+    f['mass'] = mScale * rho0
     # Now save
     f.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
     print 'snapshot saved to:', savename
     return f
 
 def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
-             nSoundCross=4, nSmooth=None):
+             nSoundCross=4, nSmooth=None, updateMass=True):
     """
     Sets up the .param and IC snapshot for performing the gas settling portion
     of IC generation (see settleGas).  All quantities are assumed to be in
@@ -296,6 +302,8 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
         Number of sound crossing times to run for.
     nSmooth : int
         (optional) Number of neighbors for smoothing
+    updateMass : bool
+        (optional) If true, set total mass to be rho0 * box volume
     """
     # Set up time stepping
     nSteps = nSoundCross * (2.*height/cs) /float(dDelta)
@@ -319,9 +327,12 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     gasparam['iCheckInterval'] = nSteps + 1
     # Set up ICs
     snap['temp'] = cs**2
-    boxVolume = boxshape[0] * boxshape[1] * height
-    totalMass = rho0 * np.sqrt(2*np.pi) * boxVolume
-    snap['mass'] = totalMass/nParticles
+    if updateMass:
+        print "updating particle masses"
+        boxVolume = boxshape[0] * boxshape[1] * height
+        totalMass = rho0 * np.sqrt(2*np.pi) * boxVolume
+        snap['mass'] = totalMass/nParticles
+        
     snap['eps'] = smooth*0.5
     # Save snapshot and param file
     diskpy.utils.configsave(gasparam, gasParamName, 'param')
@@ -357,7 +368,7 @@ def settleGas(changaPreset='default', nRuns=2):
         
         
 def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
-              nSmooth=None):
+              nSmooth=None, dustFrac = 0.0099):
     """
     Set up the dust .param and IC snapshot files. (after settleGas has 
     been performed)
@@ -378,6 +389,8 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
         Sound speed (in code units)
     nSmooth : int
         (optional) number of neighbors for smoothing
+    dustFrac : float
+        Dust fraction to use
     """
     # Load, using the paramfile for the settled snapshot (gas one)
     dustparam = utils.loadDefaultParam('dust')
@@ -388,7 +401,7 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     dustSnap = pynbody.load(filename, paramfile=inParamName)
     # Set up dust params    
     # Set dust fraction such that rho_dust/rho_gas = 1/100
-    dustSnap['dustFrac'] = 0.01/(1+0.01)
+    dustSnap['dustFrac'] = dustFrac
     # Set up the intrinsic dust size & density
     gamma = dustparam['dMeanMolWeight']
     intrinsicDustRhoCode = 1.

@@ -23,6 +23,7 @@ rho0 = 1e-3
 intrinsicDustRho = 3. # in g/cm^3
 dustSize = 1. # in mm
 numOrbitsRun = 50.
+dustFrac = 0.099
 
 # --------------------------------------
 # General settings 
