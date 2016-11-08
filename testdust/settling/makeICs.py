@@ -142,6 +142,13 @@ class IC():
             x['boxwidth'], x['nParticles'], x['nSmooth'])
         self.settings.update({'H':H, 'cs': cs, 'smooth': smooth, 'boxshape': boxshape,
                         'dDelta': dDelta})
+        if self.settings['initialSnapKind'].lower() == 'hexagonal':
+            
+            self.settings['ndim'] = 2
+            
+        else:
+            
+            self.settings['ndim'] = 3
         
     def makeInitialSnap(self):
         """
@@ -154,6 +161,9 @@ class IC():
         elif kind == 'glass':
             print 'making glass'
             self._makeGlass()
+        elif kind == 'hexagonal':
+            print 'Making hexagonal 2D ICs'
+            self._makeGrid(hexagonal=True)
         else:
             raise ValueError, "Unrecognized initial snapshot kind {0}"\
                 .format(kind)
@@ -170,13 +180,13 @@ class IC():
                          x['initialFileName'], x['verbose'])
         return snap
         
-    def _makeGrid(self):
+    def _makeGrid(self, hexagonal=False):
         """
         Generate a cubic 'grid' as a starting point, initial snapshot
         """
         x = self.settings
         snap = makeGrid(x['boxres'], x['boxshape'], x['H'], x['R0'], \
-            x['initialFileName'], x['dustFrac'], x['rho0'])
+            x['initialFileName'], x['dustFrac'], x['rho0'], hexagonal=hexagonal)
         return snap
         
     def setupGas(self):
@@ -185,16 +195,15 @@ class IC():
         See settleGas()
         """
         x = self.settings
-        updateMass = True
-#        kind = x['initialSnapKind'].lower()
-#        if kind == 'cubic':
-#            updateMass = False
-#        else:
-#            updateMass = True
+        kind = x['initialSnapKind'].lower()
+        if kind == 'cubic' or kind == 'hexagonal':
+            updateMass = False
+        else:
+            updateMass = True
             
         setupGas(x['initialFileName'], x['H'], x['cs'], x['dDelta'], \
             x['boxshape'], x['rho0'], x['smooth'], x['nSoundCross'], \
-            x['nSmooth'], updateMass)
+            x['nSmooth'], updateMass, x['ndim'])
             
     def settleGas(self, changaPreset=None, nRuns=None):
         """
@@ -223,6 +232,21 @@ class IC():
             x['R0'], x['numOrbitsRun'], x['dDelta'], x['cs'], x['nSmooth'])
         
         return output
+
+def hexGrid(boxres, boxshape, H, R0, eps=0.):
+    """
+    Generate a 2D stretched hexagonal grid in the y-z plane.
+    """
+    nParticles = boxres[0] * boxres[1]
+    y, m = ppdgrid.periodicHexMesh(boxres[0], boxres[1])
+    z = ppdgrid.posGen(nParticles, H, R0, eps, m=m)
+    pos = np.zeros([nParticles, 3])
+    pos[:, 1] = y.flatten()
+    pos[:, 2] = z.flatten()
+    # Get mass scale required to generate density of rho0 at the origin
+    mScales = [ppdgrid.particleMass(z1, rho0=1.) for z1 in z]
+    mScale = np.mean(mScales)
+    return pos, mScale
 
 def makeGlass(nParticles, boxshape, changaPreset='default', 
               glassName='glass.std', verbose=True):
@@ -255,7 +279,7 @@ def cubicGrid(boxres, boxshape, H, R0, eps=0.):
     
     return grid, mScale
     
-def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1.):
+def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1., hexagonal=False):
     """
     Generate a tipsy snapshot of gas particles on a grid with an gaussian
     density profile along the z-axis
@@ -268,7 +292,10 @@ def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1.):
     f['eps'] = 1.
     f['rho'] = 0.
     # Generate particle positions
-    pos, mScale = cubicGrid(boxres, boxshape, H, R0, eps)
+    if hexagonal:
+        pos, mScale = hexGrid(boxres, boxshape, H, R0, eps)
+    else:
+        pos, mScale = cubicGrid(boxres, boxshape, H, R0, eps)
     f['pos'] = pos
     f['mass'] = mScale * rho0
     # Now save
@@ -277,7 +304,7 @@ def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1.):
     return f
 
 def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
-             nSoundCross=4, nSmooth=None, updateMass=True):
+             nSoundCross=4, nSmooth=None, updateMass=True, ndim=3):
     """
     Sets up the .param and IC snapshot for performing the gas settling portion
     of IC generation (see settleGas).  All quantities are assumed to be in
@@ -304,6 +331,8 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
         (optional) Number of neighbors for smoothing
     updateMass : bool
         (optional) If true, set total mass to be rho0 * box volume
+    ndim : int
+        Number of dimensions this is meant to be run in.
     """
     # Set up time stepping
     nSteps = nSoundCross * (2.*height/cs) /float(dDelta)
@@ -319,6 +348,8 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     nParticles = len(snap)
     # Set up the param
     gasparam['dxPeriod'] = boxshape[0]
+    if ndim == 2:
+        gasparam['dxPeriod'] *= 100
     gasparam['dyPeriod'] = boxshape[1]
     gasparam['dzPeriod'] = 50 * height
     gasparam['dDelta'] = dDelta
@@ -339,6 +370,7 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     print ".param file saved to:", gasParamName
     snap.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
     print "snapshot saved to:", savename
+    return gasParamName
     
 def settleGas(changaPreset='default', nRuns=2):
     """
@@ -363,7 +395,10 @@ def settleGas(changaPreset='default', nRuns=2):
         snap['rho']
         # Just to make sure ALL arrays get saved, access each key
         for key in snap.g.loadable_keys():
-            snap.g[key]
+            try:
+                snap.g[key]
+            except ValueError:
+                pass
         snap.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
         
         
@@ -393,7 +428,9 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
         Dust fraction to use
     """
     # Load, using the paramfile for the settled snapshot (gas one)
-    dustparam = utils.loadDefaultParam('dust')
+    gasParamName = utils.defaultFilenames('gas')[1]
+    dustparam = diskpy.utils.configparser(gasParamName, 'param')
+    dustparam.update(utils.loadDefaultParam('dust', False))
     # Get filenames
     filename, inParamName, inPrefix = utils.defaultFilenames('gas')
     savename, dustParamName, dustPrefix = utils.defaultFilenames('dust')
@@ -402,6 +439,11 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     # Set up dust params    
     # Set dust fraction such that rho_dust/rho_gas = 1/100
     dustSnap['dustFrac'] = dustFrac
+    # Scale density to be rho0 at the origin
+    nuse = max(len(dustSnap), 32)
+    ind = abs(dustSnap['z']).argsort()
+    rhoorigin = dustSnap['z'][ind[0:nuse]].mean()
+    dustSnap['mass'] *= rho0/rhoorigin
     # Set up the intrinsic dust size & density
     gamma = dustparam['dMeanMolWeight']
     intrinsicDustRhoCode = 1.

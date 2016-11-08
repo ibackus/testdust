@@ -31,26 +31,32 @@ for parnames in (parnameDefaults, parnameUserDefaults):
         
         parnames[k] = os.path.join(_directory, v)
 
-def loadDefaultParam(param):
+def loadDefaultParam(param, fullPars=True):
     """
     Loads the settling .param defaults for param (returned as a dict).  For
     a list of available params do testdust.settling.utils.paramDefaults.keys()
     
+    If doing fullPars, the full defaults are generated.  Otherwise, only those
+    specific to that step are generated
     """
     if param not in parnameDefaults.keys():
         
         raise RuntimeError, "{0} not a valid param key.  valid options are: {1}"\
         .format(param, parnameDefaults.keys())
-        
+    
+    parDict = {}
+    
     if param is 'gas':
         # First load the general params
-        parDict = loadDefaultParam('general')
+        if fullPars:
+            parDict = loadDefaultParam('general')
         gasPar = _loadDefaultParam(parnameDefaults[param], parnameUserDefaults[param])
         parDict.update(gasPar)
         
     elif param is 'dust':
         # Load the gas defaults
-        parDict = loadDefaultParam('gas')
+        if fullPars:
+            parDict = loadDefaultParam('gas')
         dustPar = _loadDefaultParam(parnameDefaults[param], parnameUserDefaults[param])
         parDict.update(dustPar)
         
