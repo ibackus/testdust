@@ -442,7 +442,7 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     # Scale density to be rho0 at the origin
     nuse = max(len(dustSnap), 32)
     ind = abs(dustSnap['z']).argsort()
-    rhoorigin = dustSnap['z'][ind[0:nuse]].mean()
+    rhoorigin = dustSnap['rho'][ind[0:nuse]].mean()
     dustSnap['mass'] *= rho0/rhoorigin
     # Set up the intrinsic dust size & density
     gamma = dustparam['dMeanMolWeight']
