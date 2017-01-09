@@ -13,8 +13,6 @@ bPeriodic       = 1
 achInFile                = settlegas.std # Initial conditions
 achOutName               = settlegas     # file prefix
 
-# flags for dust
-dDustParam4              = 0   # dust flag
 # Units
 dMeanMolWeight           = 1
 

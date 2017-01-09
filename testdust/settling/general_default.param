@@ -6,10 +6,8 @@ achOutName               = settledust     # file prefix
 
 # flags for dust
 bFastGas                 = 1   # fastGas is not implemented for dust, but should work
-dDustParam1              = 1.  # grain size
-dDustParam2              = 1.  # grain density
-dDustParam3              = 3.5
-dDustParam4              = 1   # Do Dust parameter
+dDustSize              = 1.  # grain size
+dDustGrainDensity              = 1.  # grain density
 
 # Time stepping parameters
 iOutInterval             = 40

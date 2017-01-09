@@ -479,8 +479,8 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     intrinsicDustRhoCode = 1.
     dustSizeCode = (1.35e-3) * dustSize * (intrinsicDustRho/3.) * rho0 \
     * cs * (R0**1.5) * np.sqrt(8./(np.pi * gamma))/intrinsicDustRhoCode
-    dustparam['dDustParam1'] = dustSizeCode
-    dustparam['dDustParam2'] = intrinsicDustRhoCode
+    dustparam['dDustSize'] = dustSizeCode
+    dustparam['dDustGrainDensity'] = intrinsicDustRhoCode
     # Time stepping
     period = 2*np.pi*R0**1.5
     tRun = period * numOrbitsRun

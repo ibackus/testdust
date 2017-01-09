@@ -6,7 +6,6 @@ achOutName               = settledust     # file prefix
 
 # flags for dust
 bFastGas                 = 1   # fastGas is not implemented for dust, but should work
-dDustParam4              = 1   # Do Dust parameter
 
 # Time stepping parameters
 iLogInterval             = 1
