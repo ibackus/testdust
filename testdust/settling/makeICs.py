@@ -142,9 +142,15 @@ class IC():
             x['boxwidth'], x['nParticles'], x['nSmooth'])
         self.settings.update({'H':H, 'cs': cs, 'smooth': smooth, 'boxshape': boxshape,
                         'dDelta': dDelta})
-        if self.settings['initialSnapKind'].lower() == 'hexagonal':
+        
+        kind = self.settings['initialSnapKind']
+        if kind == 'hexagonal':
             
             self.settings['ndim'] = 2
+            
+        elif kind == 'line':
+            
+            self.settings['ndim'] = 1
             
         else:
             
@@ -154,7 +160,7 @@ class IC():
         """
         Generate a starting-point, initial snapshot.  A wrapper function
         """
-        kind = self.settings['initialSnapKind'].lower()
+        kind = self.settings['initialSnapKind']
         if kind == 'cubic':
             print 'Making cubic ICs'
             self._makeGrid()
@@ -163,7 +169,10 @@ class IC():
             self._makeGlass()
         elif kind == 'hexagonal':
             print 'Making hexagonal 2D ICs'
-            self._makeGrid(hexagonal=True)
+            self._makeGrid()
+        elif kind == 'line':
+            print 'Making line (1D) ICs'
+            self._makeGrid()
         else:
             raise ValueError, "Unrecognized initial snapshot kind {0}"\
                 .format(kind)
@@ -180,13 +189,13 @@ class IC():
                          x['initialFileName'], x['verbose'])
         return snap
         
-    def _makeGrid(self, hexagonal=False):
+    def _makeGrid(self):
         """
         Generate a cubic 'grid' as a starting point, initial snapshot
         """
         x = self.settings
         snap = makeGrid(x['boxres'], x['boxshape'], x['H'], x['R0'], \
-            x['initialFileName'], x['dustFrac'], x['rho0'], hexagonal=hexagonal)
+            x['initialFileName'], x['dustFrac'], x['rho0'], kind=x['initialSnapKind'])
         return snap
         
     def setupGas(self):
@@ -239,6 +248,7 @@ def hexGrid(boxres, boxshape, H, R0, eps=0.):
     """
     nParticles = boxres[0] * boxres[1]
     y, m = ppdgrid.periodicHexMesh(boxres[0], boxres[1])
+    y *= boxshape[1]
     z = ppdgrid.posGen(nParticles, H, R0, eps, m=m)
     pos = np.zeros([nParticles, 3])
     pos[:, 1] = y.flatten()
@@ -260,6 +270,15 @@ def makeGlass(nParticles, boxshape, changaPreset='default',
     shutil.move('glass.std', glassName)
     return glass
     
+def lineGrid(nParticles, H, R0, eps=0.):
+    """
+    """
+    if hasattr(nParticles, '__iter__'):
+        nParticles = nParticles[0]
+    z = utils.gaussianGrid(nParticles)
+    mScale = ppdgrid.posGen(nParticles, H, R0, eps)
+    return z, mScale
+    
 def cubicGrid(boxres, boxshape, H, R0, eps=0.):
     """
     Generates a grid of positions with a gaussian density profile along the 
@@ -279,7 +298,7 @@ def cubicGrid(boxres, boxshape, H, R0, eps=0.):
     
     return grid, mScale
     
-def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1., hexagonal=False):
+def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1., kind='cubic'):
     """
     Generate a tipsy snapshot of gas particles on a grid with an gaussian
     density profile along the z-axis
@@ -292,10 +311,17 @@ def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1., hexagonal=False
     f['eps'] = 1.
     f['rho'] = 0.
     # Generate particle positions
-    if hexagonal:
+    print 'making {0} grid'.format(kind)
+    if kind == 'hexagonal':
         pos, mScale = hexGrid(boxres, boxshape, H, R0, eps)
-    else:
+    elif kind == 'cubic':
         pos, mScale = cubicGrid(boxres, boxshape, H, R0, eps)
+    elif kind == 'line':
+        z, mScale = lineGrid(boxres, H, R0, eps)
+        pos = np.zeros([len(z), 3])
+        pos[:,2] = z
+    else:
+        raise ValueError, 'Unknown grid kind {0}'.format(kind)
     f['pos'] = pos
     f['mass'] = mScale * rho0
     # Now save
@@ -347,11 +373,15 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     snap = pynbody.load(filename)
     nParticles = len(snap)
     # Set up the param
-    gasparam['dxPeriod'] = boxshape[0]
-    if ndim == 2:
-        gasparam['dxPeriod'] *= 100
-    gasparam['dyPeriod'] = boxshape[1]
     gasparam['dzPeriod'] = 50 * height
+    gasparam['dxPeriod'] = boxshape[0]
+    gasparam['dyPeriod'] = boxshape[1]
+    if ndim == 1:
+        gasparam['dxPeriod'] = gasparam['dzPeriod'] * 10
+        gasparam['dyPeriod'] = gasparam['dzPeriod'] * 10
+    elif ndim == 2:
+        gasparam['dxPeriod'] = gasparam['dzPeriod'] * 10
+    
     gasparam['dDelta'] = dDelta
     gasparam['nSteps'] = nSteps
     gasparam['iOutInterval'] = nSteps + 1

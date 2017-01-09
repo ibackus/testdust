@@ -108,7 +108,7 @@ def makeInvErf(zmax=30, npts=1e5):
 
 def gaussianGrid(nz=50):
     """
-    Generate a set of montonically increasing points to create a gaussian
+    Generate a set of points centered around zero to create a gaussian
     density profile for SPH.
     
     If you have particles of equal mass, placing the particles at these points
@@ -126,9 +126,12 @@ def gaussianGrid(nz=50):
         Numpy array of points, z >= 0
     """
     erfInv = makeInvErf()
-    m = np.linspace(0, 1, nz+1)[0:-1]
+    m = np.linspace(-1, 1, nz+2)[1:-1]
+    negs = m < 0
+    m = abs(m)
     z = erfInv(m)
     z *= np.sqrt(2)
+    z[negs] *= -1
     return z
     
 def _estRho(z):

@@ -15,4 +15,4 @@ iOutInterval             = 100
 # SPH
 dConstAlpha              = 1
 dConstBeta               = 2
-nSmooth 		 = 151
+nSmooth 		 = 64

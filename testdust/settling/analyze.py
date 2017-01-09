@@ -15,6 +15,12 @@ import os
 SimArray = pynbody.array.SimArray
 import json
 
+# Derived arrays
+@pynbody.derived_array
+def dustRho(sim):
+    sim['dustFrac'].units = pynbody.units.Unit('1')
+    return sim['dustFrac'] * sim['rho']
+
 def loadSim(simdir, fprefix='settledust', settingsFile='runparams.json'):
     
     if hasattr(simdir, '__iter__'):
@@ -94,7 +100,21 @@ def analyze(fs, pars):
     results['period'] = 2*np.pi*pars['R0']**1.5
     
     return results
-
+    
+def scatter3D(f, qty):
+    """
+    """
+    plt.clf()
+    fig = plt.gcf()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlabel('y')
+    ax.set_ylabel('z')
+    ax.set_zlabel(qty)
+    
+    ax.scatter(f['y'], f['z'], f[qty], 'o')
+    
+    fig.canvas.draw()
+    
 def plotDustRho(results, figname='figures/plot.pdf', **kwargs):
     
     r = results

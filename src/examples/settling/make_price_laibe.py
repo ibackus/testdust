@@ -24,14 +24,21 @@ import testdust
 import os
 
 # -----------------------------------
-## Generate a glass 
-#savedir = 'price_laibe_glass'
-#settingsfile = 'price_laibe_glass.py'
-# OR use a cubic grid
-savedir = 'price_laibe_cubic'
-settingsfile = 'price_laibe_cubic_grid.py'
+# Available profiles
 # -----------------------------------
+# GLASS
+#savedir = 'glass'
+#settingsfile = 'price_laibe_glass.py'
+# CUBIC GRID
+savedir = 'cubic'
+settingsfile = 'price_laibe_cubic_grid.py'
+# HEXAGONAL 2D GRID
+savedir = 'hexagonal'
+settingsfile = 'price_laibe_hexagonal.py'
 
+# -----------------------------------
+# Run IC generation
+# -----------------------------------
 # Initialize the ICs with the settings
 IC = testdust.settling.makeICs.IC(settingsfile)
 # Its a good idea to generate these ICs in their own folder
@@ -48,3 +55,4 @@ IC.settleGas()
 IC.setupDust()
 
 print 'Successfully made dust settling test ICs!'
+print 'Saved to directory:', savedir
