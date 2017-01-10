@@ -484,7 +484,7 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     # Time stepping
     period = 2*np.pi*R0**1.5
     tRun = period * numOrbitsRun
-    dustparam['dDelta'] = dDelta/10.
+    dustparam['dDelta'] = dDelta/100.
     dustparam['nSteps'] = np.round(tRun/dustparam['dDelta']).astype(int)
     dustparam['iOutInterval'] = np.round(period/dustparam['dDelta']).astype(int)
     if nSmooth is not None:

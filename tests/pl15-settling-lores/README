@@ -1,0 +1,16 @@
+This test attempts to reproduce the results of the Price & Laibe 2015 
+"Dust settling in a protoplanetary disc" test (section 4.4).  This is a 
+2-dimensional test.
+
+This is the low resolution test (16 by 56 particles).  All parameters are
+the same as in the PL15 test (to the best of my abilities).  
+
+This needs to be run with dust + ND-SPH (currently on the dust/ndsph branch
+of the ibackus fork of ChaNGa).  To compile (2D SPH + dust):
+
+    ./configure --enable-dustygas=fraction --enable-ndsph=2
+
+Currently, this produces very noisy results.  Only the M4 cubic kernel has
+been tested, not the Wendland kernel.  Higher resolution tests also seem to
+be very noisy.
+
