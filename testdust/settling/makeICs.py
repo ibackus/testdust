@@ -48,6 +48,8 @@ from pprint import pformat
 import numpy as np
 import shutil
 import itertools
+import os
+import matplotlib.pyplot as plt
 
 import pynbody
 SimArray = pynbody.array.SimArray
@@ -59,6 +61,12 @@ from diskpy.ICgen.ICgen_utils import changa_command, changa_run
 import testdust
 import utils
 import ppdgrid
+
+# Setup constants used here
+molecularWeight = SimArray(2.0, 'm_p')
+kB = SimArray(1.0, 'k')
+G = SimArray(1.0, 'G')
+Msol = SimArray(1.0, 'Msol')
 
 class IC():
     """
@@ -212,7 +220,7 @@ class IC():
             
         setupGas(x['initialFileName'], x['H'], x['cs'], x['dDelta'], \
             x['boxshape'], x['rho0'], x['smooth'], x['nSoundCross'], \
-            x['nSmooth'], updateMass, x['ndim'])
+            x['nSmooth'], updateMass, x['ndim'], x['changaPreset'])
             
     def settleGas(self, changaPreset=None, nRuns=None):
         """
@@ -330,7 +338,8 @@ def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1., kind='cubic'):
     return f
 
 def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
-             nSoundCross=4, nSmooth=None, updateMass=True, ndim=3):
+             nSoundCross=4, nSmooth=None, updateMass=True, ndim=3,
+             changaPreset='default'):
     """
     Sets up the .param and IC snapshot for performing the gas settling portion
     of IC generation (see settleGas).  All quantities are assumed to be in
@@ -387,7 +396,12 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     gasparam['iOutInterval'] = nSteps + 1
     gasparam['iCheckInterval'] = nSteps + 1
     # Set up ICs
-    snap['temp'] = cs**2
+    units = diskpy.pychanga.units_from_param(gasparam)
+    v_unit = units['l_unit']/units['t_unit']
+    csSimArray = SimArray(cs, v_unit)
+    T = (molecularWeight * csSimArray**2)/kB
+    T.convert_units('K')
+    snap['temp'] = T
     if updateMass:
         print "updating particle masses"
         boxVolume = boxshape[0] * boxshape[1] * height
@@ -400,6 +414,22 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     print ".param file saved to:", gasParamName
     snap.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
     print "snapshot saved to:", savename
+    
+    # Run ChaNGa for zero steps to get density
+    cmd = changa_command(gasParamName, changaPreset, changa_args='-n 0')
+    changa_run(cmd, require_success=True)
+    os.system('mv {0}.000000 {1}'.format(gasPrefix, savename))
+    snap = pynbody.load(savename, paramfile=gasParamName)
+    ind = abs(snap['z']).argsort()[0:30]
+    midplaneDensity = snap['rho'][ind].mean()
+    denUnit = units['m_unit']/units['l_unit']**3
+    rho0physical = SimArray(rho0, denUnit)
+    mScale = (rho0physical/midplaneDensity).in_units('1')
+    print 'scaling mass by', mScale
+    snap['mass'] *= mScale
+    snap['rho'] *= mScale
+    snap.write()
+    
     return gasParamName
     
 def settleGas(changaPreset='default', nRuns=2):
@@ -413,6 +443,8 @@ def settleGas(changaPreset='default', nRuns=2):
     
     cmd = changa_command(gasParamName, changaPreset)
     # Now run for more sound crossing times
+    plt.figure()
+    plt.ion()
     outfile = '{0}.{1:06}'.format(gasparam['achOutName'], gasparam['nSteps'])
     for i in range(nRuns):
         # Run
@@ -430,6 +462,11 @@ def settleGas(changaPreset='default', nRuns=2):
             except ValueError:
                 pass
         snap.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
+        plt.clf()
+        plt.plot(snap['z'], snap['rho'], '.')
+        plt.show(block=False)
+        plt.pause(0.05)
+        
         
         
 def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
@@ -469,11 +506,6 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     # Set up dust params    
     # Set dust fraction such that rho_dust/rho_gas = 1/100
     dustSnap['dustFrac'] = dustFrac
-    # Scale density to be rho0 at the origin
-    nuse = max(len(dustSnap), 32)
-    ind = abs(dustSnap['z']).argsort()
-    rhoorigin = dustSnap['rho'][ind[0:nuse]].mean()
-    dustSnap['mass'] *= rho0/rhoorigin
     # Set up the intrinsic dust size & density
     gamma = dustparam['dMeanMolWeight']
     intrinsicDustRhoCode = 1.
