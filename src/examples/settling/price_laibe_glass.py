@@ -39,8 +39,8 @@ verbose = False
 # Algorithm settings
 # --------------------------------------
 # Sound crossing times to settle gas for
-nSoundCross = 4 
+tGasSettle = 1000
 # how many runs to settle for (zeroing velocity each time)
-nRuns = 2 
+nRuns = 1
 # For all the runs, how many neighbors to use for smoothing
 nSmooth = 32

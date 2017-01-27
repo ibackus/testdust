@@ -5,8 +5,9 @@ sub-folders
 Files:
 * make_price_laibe.py
     * Script to generate the ICs.
+
 * price_laibe_cubic_grid.py
-    * settings.  These will start with a cubic grid
-* price_laibe_glass.py
-    * settings.  These will start with a glass
+  price_laibe_glass.py
+  price_laibe_hexagonal.py
+    * Settings files For IC generation
 

@@ -35,15 +35,14 @@ dustFrac = 0.099
 initialSnapKind = 'cubic' 
 initialFileName = 'grid.std'
 # See diskpy for info on changa presets
-#changaPreset = 'default' 
-changaPreset = 'twocore' 
+changaPreset = 'default' 
 verbose = False
 
 # --------------------------------------
 # Algorithm settings
 # --------------------------------------
 # Sound crossing times to settle gas for
-nSoundCross = 0.5
+tGasSettle = 1000
 # how many runs to settle for (zeroing velocity each time)
 nRuns = 1
 # For all the runs, how many neighbors to use for smoothing
