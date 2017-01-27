@@ -6,8 +6,8 @@ Files:
 * make_price_laibe.py
     * Script to generate the ICs.
 
-* price_laibe_cubic_grid.py
-  price_laibe_glass.py
-  price_laibe_hexagonal.py
+* settings_cubic_grid.py
+  settings_glass.py
+  settings_hexagonal.py
     * Settings files For IC generation
 
