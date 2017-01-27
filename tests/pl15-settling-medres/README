@@ -1,0 +1,18 @@
+This folder contains the medium-resolution dust settling test of Price & Laibe
+2015.  To the best of my abilities, the ICs were generated exactly as in PL15.
+Key points about the ICgen process here:
+    * 2 dimensions
+    * Start with stretched hexagonal grid
+    * Use the Wendland C4 kernel throughout
+    * Settle the gas using a damping force
+    
+This med-resolution test starts with 32 x 111 particles.  At the current state,
+the settling rate does not appear to agree with PL15 figure 8, but that may
+just be due to some small differences tStop due to a typo in their paper.
+Outputs are approximately every "orbit", defined by 2*pi*sqrt(R0^3/GM)
+
+This needs to be run with wendland, dust + ND-SPH (currently on the dust/ndsph branch
+of the ibackus fork of ChaNGa).  To compile (2D SPH + dust + wendland):
+
+    ./configure --enable-dustygas=fraction --enable-ndsph=2
+
