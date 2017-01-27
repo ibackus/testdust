@@ -59,6 +59,9 @@ def loadDefaultParam(param, fullPars=True):
             parDict = loadDefaultParam('gas')
         dustPar = _loadDefaultParam(parnameDefaults[param], parnameUserDefaults[param])
         parDict.update(dustPar)
+        # Turn off glass damping
+        if 'dGlassDamper' in parDict:
+            parDict.pop('dGlassDamper', None)
         
     else:
         
