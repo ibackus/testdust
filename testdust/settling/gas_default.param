@@ -20,7 +20,6 @@ dMeanMolWeight           = 1
 iLogInterval             = 1
 
 # Flags for SPH + grav
-dGasConst                = 1.   # This forces gas constant R=1, so cs=T=1 is possible
 bDoGravity               = 0    # For this test, do not calculate self-gravity
 bDoDensity               = 0
 bDoGas                   = 1

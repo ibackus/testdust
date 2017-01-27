@@ -1,8 +1,10 @@
 # General default params, used as defaults for the settlegas and and settledust
 # portions of IC generation
 # Filenames
-achInFile                = settledust.std # Initial conditions
-achOutName               = settledust     # file prefix
+achInFile               = settledust.std # Initial conditions
+achOutName              = settledust     # file prefix
+dMsolUnit               = 1.
+dKpcUnit                = 4.8481368e-08  # 10 AU
 
 # flags for dust
 bFastGas                 = 1   # fastGas is not implemented for dust, but should work
@@ -15,3 +17,6 @@ nSteps                   = 4000
 dDelta                   = 0.5e-2
 iLogInterval             = 1
 iCheckInterval           = 500
+
+# Glass generation - drag force (same as f_damp in PL15 eq.56)
+dGlassDamper = 0.03
