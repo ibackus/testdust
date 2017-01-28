@@ -27,7 +27,7 @@ import os
 # It's a good idea to generate the ICs in a clean folder
 savedir = 'dust-settling'
 # IC settings are stored in this file
-settingsfile = 'price_laibe_hexagonal.py'
+settingsfile = 'settings_hexagonal.py'
 # Initialize the ICs with the settings
 IC = testdust.settling.makeICs.IC(settingsfile)
 # Its a good idea to generate these ICs in their own folder
