@@ -145,12 +145,6 @@ class IC():
         """
         Perform initial calculations/derivations from the settings
         """
-        x = self.settings
-        H, cs, smooth, boxshape, dDelta = initCalc(x['hOverR'], x['R0'], \
-            x['boxwidth'], x['nParticles'], x['nSmooth'])
-        self.settings.update({'H':H, 'cs': cs, 'smooth': smooth, 'boxshape': boxshape,
-                        'dDelta': dDelta})
-        
         kind = self.settings['initialSnapKind']
         if kind == 'hexagonal':
             
@@ -163,6 +157,12 @@ class IC():
         else:
             
             self.settings['ndim'] = 3
+        
+        x = self.settings        
+        H, cs, smooth, boxshape, dDelta = initCalc(x['hOverR'], x['R0'], \
+            x['boxwidth'], x['nParticles'], x['nSmooth'], x['ndim'])
+        self.settings.update({'H':H, 'cs': cs, 'smooth': smooth, 'boxshape': boxshape,
+                        'dDelta': dDelta})
         
     def makeInitialSnap(self):
         """
@@ -526,7 +526,7 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
     # Time stepping
     period = 2*np.pi*R0**1.5
     tRun = period * numOrbitsRun
-    dustparam['dDelta'] = dDelta/10.
+    dustparam['dDelta'] = dDelta
     dustparam['nSteps'] = np.round(tRun/dustparam['dDelta']).astype(int)
     dustparam['iOutInterval'] = np.round(period/dustparam['dDelta']).astype(int)
     if nSmooth is not None:
@@ -557,7 +557,7 @@ def setupDust(dustSize, intrinsicDustRho, rho0, R0, numOrbitsRun, dDelta, cs,
         dustSnap.write(filename=savename)
     print 'snapshot saved to:', savename
     
-def initCalc(hOverR, R0, boxwidth, nParticles, nSmooth=32):
+def initCalc(hOverR, R0, boxwidth, nParticles, nSmooth=32, ndim=3):
     """
     Initial derivations from settings
     
@@ -573,14 +573,17 @@ def initCalc(hOverR, R0, boxwidth, nParticles, nSmooth=32):
         Number of particles
     nSmooth : int
         Number of neighbors to smooth over for the simulation
+    ndim : int
+        Number of dimensions running in
     """
     # Initial derivations
     H = hOverR * R0
-    cs = hOverR/np.sqrt(R0)
-    smooth = (float(nSmooth) * (H*boxwidth**2)/nParticles)**(1./3) # approx smooth length
+    cs = hOverR/np.sqrt(R0) # in code units
+    volume = H * boxwidth**(ndim-1)
+    smooth = (float(nSmooth) * (volume)/nParticles)**(1./ndim) # approx smooth length
     boxshape = [boxwidth, boxwidth, 2*H]
     # Time stepping for gas settling
     tCourant = smooth/cs
-    dDelta = tCourant
+    dDelta = tCourant/10.
     
     return H, cs, smooth, boxshape, dDelta
