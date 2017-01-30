@@ -466,6 +466,9 @@ def settleGas(changaPreset='default', nRuns=2):
         snap.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
         plt.clf()
         plt.plot(snap['z'], snap['rho'], '.')
+        plt.xlabel('z')
+        plt.ylabel(r'$\rho$')
+        plt.title('Gas density after settling')
         plt.show(block=False)
         plt.pause(0.05)
         
