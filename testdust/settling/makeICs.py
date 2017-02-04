@@ -234,8 +234,8 @@ class IC():
             changaPreset = x['changaPreset']
         if nRuns is None:
             nRuns = x['nRuns']
-            
-        output = settleGas(changaPreset, nRuns)
+        plot = x.get('plot', False)
+        output = settleGas(changaPreset, nRuns, plot)
         return output
         
     def setupDust(self):
@@ -434,7 +434,7 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     
     return gasParamName
     
-def settleGas(changaPreset='default', nRuns=2):
+def settleGas(changaPreset='default', nRuns=2, plot=False):
     """
     Perform the gas settling portion of the IC generation, using ChaNGa.
     """    
@@ -445,8 +445,9 @@ def settleGas(changaPreset='default', nRuns=2):
     
     cmd = changa_command(gasParamName, changaPreset)
     # Now run for more sound crossing times
-    plt.figure()
-    plt.ion()
+    if plot:
+        plt.figure()
+        plt.ion()
     outfile = '{0}.{1:06}'.format(gasparam['achOutName'], gasparam['nSteps'])
     for i in range(nRuns):
         # Run
@@ -464,13 +465,14 @@ def settleGas(changaPreset='default', nRuns=2):
             except ValueError:
                 pass
         snap.write(filename=savename, fmt=pynbody.tipsy.TipsySnap)
-        plt.clf()
-        plt.plot(snap['z'], snap['rho'], '.')
-        plt.xlabel('z')
-        plt.ylabel(r'$\rho$')
-        plt.title('Gas density after settling')
-        plt.show(block=False)
-        plt.pause(0.05)
+        if plot:
+            plt.clf()
+            plt.plot(snap['z'], snap['rho'], '.')
+            plt.xlabel('z')
+            plt.ylabel(r'$\rho$')
+            plt.title('Gas density after settling')
+            plt.show(block=False)
+            plt.pause(0.05)
         
         
         
