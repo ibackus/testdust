@@ -26,8 +26,7 @@ bDoGas                   = 1
 bGasAdiabatic            = 0
 bGasIsothermal           = 1
 bVDetails                = 1
-
-dConstAlpha              = 20
+dConstAlpha              = 1
 dConstBeta               = 2
 
 # Basic parameters
