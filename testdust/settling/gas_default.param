@@ -1,5 +1,9 @@
 # Param defaults for the settlegas and settledust portions of generation
 # User defined defaults should go in gas_user_default.param
+
+# Glass generation - drag force (same as f_damp in PL15 eq.56)
+dGlassDamper = 0.03
+
 # Patch potential parameters
 bPatch          = 1
 dOrbDist        = 5.0
@@ -26,7 +30,7 @@ bDoGas                   = 1
 bGasAdiabatic            = 0
 bGasIsothermal           = 1
 bVDetails                = 1
-dConstAlpha              = 1
+dConstAlpha              = 0.01
 dConstBeta               = 2
 
 # Basic parameters

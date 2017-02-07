@@ -18,5 +18,3 @@ dDelta                   = 0.5e-2
 iLogInterval             = 1
 iCheckInterval           = 500
 
-# Glass generation - drag force (same as f_damp in PL15 eq.56)
-dGlassDamper = 0.03

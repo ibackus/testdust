@@ -12,6 +12,4 @@ iLogInterval             = 1
 iOutInterval             = 100
 
 # SPH
-#dConstAlpha              = 1
-#dConstBeta               = 2
 nSmooth 		 = 64
