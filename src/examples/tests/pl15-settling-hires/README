@@ -16,3 +16,5 @@ of the ibackus fork of ChaNGa).  To compile (2D SPH + dust + wendland):
 
     ./configure --enable-dustygas=fraction --enable-ndsph=2
 
+NOTE: this was generated with alpha = 20 (by mistake!) during the gas settling
+phase and is currently set to run with alpha = 1.  alpha = 0.01 may work better.
