@@ -45,6 +45,9 @@ verbose = False
 # --------------------------------------
 # Algorithm settings
 # --------------------------------------
+#damping = None # automatically set damping force
+damping = 0.03 # price and laibe setting
+
 # Sound crossing times to settle gas for
 # Price and Laibe use 1000, but you can get away with less, probably
 tGasSettle = 1000
