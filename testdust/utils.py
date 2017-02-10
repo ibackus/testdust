@@ -10,6 +10,56 @@ import os
 import shutil
 import numpy as np
 from types import ModuleType
+import pynbody
+SimArray = pynbody.array.SimArray
+
+kB = SimArray(1.0, 'k')
+
+def getcs(snap, param):
+    """
+    From a simulation snapshot and param file (or dict), return the average
+    sound speed. (in simulation units)
+    """
+    
+    # Get sound speed
+    units = diskpy.pychanga.units_from_param(param)
+    mu = units['m_unit']
+    tu = units['t_unit']
+    lu = units['l_unit']
+    m = SimArray(param['dMeanMolWeight'], 'm_p', dtype=float)
+    m.convert_units(mu)
+    K = pynbody.units.Unit('K')
+    kBunit = mu*lu**2/(K*tu**2)
+    k = kB.in_units(kBunit)
+    T = snap['temp'].mean()
+    cs2 = k*T/m
+    cs = SimArray(float(np.sqrt(cs2)), lu/tu)
+    
+    return cs
+
+
+def setupParamBounds(param, boxShape):
+    """
+    Sets up the dxPeriod, dyPeriod, and dzPeriod parameters in the .param file
+    dict according to boxShape.  boxShape is length 1, 2, or 3 depending on
+    how many dimensions the periodic box is in.
+    """
+    nDim = len(boxShape)
+    maxL = max(boxShape)
+    if nDim < 3:
+        param['dxPeriod'] = 100 * maxL
+    else:
+        param['dxPeriod'] = float(boxShape[0])
+    if nDim < 2:
+        param['dyPeriod'] = 100 * maxL
+    else:
+        param['dyPeriod'] = float(boxShape[-2])
+        
+    param['dzPeriod'] = float(boxShape[-1])
+    
+    if 'dPeriod' in param:
+        
+        param.pop('dPeriod', None)
 
 def gridSize(nParticles, boxshape):
     """

@@ -61,6 +61,7 @@ from diskpy.ICgen.ICgen_utils import changa_command, changa_run
 import testdust
 import utils
 import ppdgrid
+from randomNormalSnap import normalSnap
 
 # Setup constants used here
 molecularWeight = SimArray(2.0, 'm_p')
@@ -153,6 +154,15 @@ class IC():
         elif kind == 'line':
             
             self.settings['ndim'] = 1
+        
+        elif kind == 'random':
+            
+            if 'ndim' not in self.settings:
+                
+                raise ValueError, "for random ICs, ndim must be set"
+                
+            self.settings['baseshape'] = (self.settings['ndim'] - 1) \
+                         * [self.settings['boxwidth']]
             
         else:
             
@@ -181,6 +191,8 @@ class IC():
         elif kind == 'line':
             print 'Making line (1D) ICs'
             self._makeGrid()
+        elif kind == 'random':
+            self._makeRandom()
         else:
             raise ValueError, "Unrecognized initial snapshot kind {0}"\
                 .format(kind)
@@ -205,13 +217,25 @@ class IC():
         snap = makeGrid(x['boxres'], x['boxshape'], x['H'], x['R0'], \
             x['initialFileName'], x['dustFrac'], x['rho0'], kind=x['initialSnapKind'])
         return snap
+    
+    def _makeRandom(self):
+        """
+        """
+        x = self.settings
+        snap = normalSnap(x['nParticles'], x['H'], x['baseshape'])
+        snap.write(fmt=pynbody.tipsy.TipsySnap, filename=x['initialFileName'])
+        print 'Snapshot saved to', x['initialFileName']
+        return snap
         
     def setupGas(self):
         """
         Set-up the snapshot and .param file used to perform the gas settling.
         See settleGas()
+        
+        extrapars is a .param dict that will override any runtime parameters
         """
         x = self.settings
+        damping = x.get('damping', None)
         kind = x['initialSnapKind'].lower()
         if kind == 'cubic' or kind == 'hexagonal':
             updateMass = False
@@ -221,7 +245,7 @@ class IC():
         setupGas(x['initialFileName'], x['H'], x['cs'], x['dDelta'], \
             x['boxshape'], x['rho0'], x['smooth'], \
             x['nSmooth'], updateMass, x['ndim'], x['changaPreset'], \
-             x['tGasSettle'])
+             x['tGasSettle'], damping=damping)
             
     def settleGas(self, changaPreset=None, nRuns=None):
         """
@@ -277,6 +301,7 @@ def makeGlass(nParticles, boxshape, changaPreset='default',
     import sphglass
     glass = sphglass.glassBox(nParticles, boxshape, changaPreset, verbose)
     shutil.move('glass.std', glassName)
+    print 'Snapshot saved to', glassName
     return glass
     
 def lineGrid(nParticles, H, R0, eps=0.):
@@ -340,7 +365,7 @@ def makeGrid(boxres, boxshape, H, R0, savename, eps=0., rho0=1., kind='cubic'):
 
 def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
              nSmooth=None, updateMass=True, ndim=3, changaPreset='default', 
-             tGasSettle=1000):
+             tGasSettle=1000, damping=None):
     """
     Sets up the .param and IC snapshot for performing the gas settling portion
     of IC generation (see settleGas).  All quantities are assumed to be in
@@ -370,6 +395,9 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     tGasSettle : float
         Simulation time (in code units) to run the settling for.  Default is
         the same as in Price & Laibe 2015
+    damping : float
+        Damping force size for acceleration dv/dt = -damping * v.  
+        If None, damping is set automatically as cs/(h_mean)
     """
     # Set up time stepping
     nSteps = int(np.round(tGasSettle/float(dDelta)))
@@ -420,8 +448,9 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     # Run ChaNGa for zero steps to get density
     cmd = changa_command(gasParamName, changaPreset, changa_args='-n 0')
     changa_run(cmd, require_success=True)
-    os.system('mv {0}.000000 {1}'.format(gasPrefix, savename))
-    snap = pynbody.load(savename, paramfile=gasParamName)
+    loadname = gasPrefix + '.000000'
+#    os.system('mv {0}.000000 {1}'.format(gasPrefix, savename))
+    snap = pynbody.load(loadname, paramfile=gasParamName)
     ind = abs(snap['z']).argsort()[0:30]
     midplaneDensity = snap['rho'][ind].mean()
     denUnit = units['m_unit']/units['l_unit']**3
@@ -430,7 +459,17 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     print 'scaling mass by', mScale
     snap['mass'] *= mScale
     snap['rho'] *= mScale
-    snap.write()
+        
+    if damping is None:
+        
+        h = snap['smoothlength'].mean()
+        cs = testdust.utils.getcs(snap, gasparam)
+        damping = float(cs/h)
+    
+    gasparam['dGlassDamper'] = damping
+    # Save snapshot and param file
+    diskpy.utils.configsave(gasparam, gasParamName, 'param')
+    snap.write(filename=savename)
     
     return gasParamName
     
