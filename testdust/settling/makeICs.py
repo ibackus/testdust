@@ -622,7 +622,9 @@ def initCalc(hOverR, R0, boxwidth, nParticles, nSmooth=32, ndim=3):
     """
     # Initial derivations
     H = hOverR * R0
-    cs = hOverR/np.sqrt(R0) # in code units
+    # Assuming G = 1 and Mstar = 1 in code units:
+    omega0 = R0**(-1.5)
+    cs = H * omega0
     volume = H * boxwidth**(ndim-1)
     smooth = (float(nSmooth) * (volume)/nParticles)**(1./ndim) # approx smooth length
     boxshape = [boxwidth, boxwidth, 2*H]
