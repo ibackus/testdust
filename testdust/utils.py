@@ -15,6 +15,39 @@ SimArray = pynbody.array.SimArray
 
 kB = SimArray(1.0, 'k')
 
+def calcGasVals(f, param={}):
+    """
+    Calculates gas values for a snapshot or subsnap (must be gas particles only)
+    for a dusty-gas mixture.  A param dict/path to param can be supplied.
+    
+    Calculates:
+        'rhog': gas density
+        'pressure': gas pressure
+        'energy': gas internal specific energy
+        
+    Also sets 'dustFrac' units to 1.
+    """
+    units = diskpy.pychanga.units_from_param(param)
+    molecularWeight = diskpy.pychanga.getpar('dMeanMolWeight', param)
+    molecularWeight = SimArray(molecularWeight, 'm_p')
+    gamma = diskpy.pychanga.getpar('dConstGamma', param)
+    
+    # Calculate gas density
+    f['dustFrac']
+    f['dustFrac'].units = 1
+    f['rhog'] = (1.0 - f['dustFrac']) * f['rho']
+    
+    # Calculate pressure
+    pressure = f['rhog'] * kB * f['temp']/molecularWeight
+    pressure.convert_units(units['pres_unit'])
+    f['pressure'] = pressure
+    
+    # Calculate internal energy
+    energy = f['pressure'] / (f['rhog'] * (gamma - 1))
+    specific_energy_unit = (units['v_unit'])**2
+    energy.convert_units(specific_energy_unit)
+    f['energy'] = energy
+
 def getcs(snap, param):
     """
     From a simulation snapshot and param file (or dict), return the average
