@@ -165,7 +165,9 @@ def loadDefaultParam(defaults, userdefaults):
     params : dict
         A dictionary of the params
     """
+    print 'Loading defaults from:', defaults
     defaults = diskpy.utils.configparser(defaults, 'param')
+    print 'Loading user defaults from:', userdefaults
     userdefaults = diskpy.utils.configparser(userdefaults, 'param')
     defaults.update(userdefaults)
     return defaults
