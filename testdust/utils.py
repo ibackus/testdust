@@ -26,7 +26,13 @@ def calcGasVals(f, param={}):
         'energy': gas internal specific energy
         
     Also sets 'dustFrac' units to 1.
+    
+    Returns gamma and mean molecular weight
     """
+    if isinstance(param, str):
+        
+        param = diskpy.utils.configparser(param,'param')
+        
     units = diskpy.pychanga.units_from_param(param)
     molecularWeight = diskpy.pychanga.getpar('dMeanMolWeight', param)
     molecularWeight = SimArray(molecularWeight, 'm_p')
@@ -47,6 +53,8 @@ def calcGasVals(f, param={}):
     specific_energy_unit = (units['v_unit'])**2
     energy.convert_units(specific_energy_unit)
     f['energy'] = energy
+     
+    return gamma, molecularWeight
 
 def getcs(snap, param):
     """

@@ -6,3 +6,4 @@ Created on Tue Mar  7 10:59:55 2017
 @author: ibackus
 """
 import makeICs
+import analyze
