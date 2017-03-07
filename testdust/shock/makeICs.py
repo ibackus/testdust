@@ -62,7 +62,7 @@ def shock1d(nParticles=2*569, L=2., P=(1, 1./8), rhog=(1, 1./8), dustFrac=0.5,
     inputParamName: str
         (optional) Override the default ChaNGa params.  This can also be
         done by changing the appropriate user default param in this directory.
-        
+    
     Returns
     -------
     ICs: SimSnap
@@ -71,6 +71,8 @@ def shock1d(nParticles=2*569, L=2., P=(1, 1./8), rhog=(1, 1./8), dustFrac=0.5,
         dict of the runtime params
     arguments: dict
         Arguments used when calling this function, including defaults.
+    paramsavename: str
+        Path the param file is saved to
     """
     # Keep track of arguments (and save at the end)
     arguments = locals()
@@ -147,4 +149,4 @@ def shock1d(nParticles=2*569, L=2., P=(1, 1./8), rhog=(1, 1./8), dustFrac=0.5,
     pickle.dump(arguments, open(argsavename, 'w'), 2)
     print 'arguments dict pickled to:', argsavename
     
-    return f, param, arguments
+    return f, param, arguments, paramsavename
