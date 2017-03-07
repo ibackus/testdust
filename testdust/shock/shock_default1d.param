@@ -1,0 +1,51 @@
+achInFile                = dustyshock.std
+achOutName               = dustyshock
+
+# Units
+dKpcUnit                 = 1e-05
+dMsolUnit                = 1
+
+# Periodic BCs
+nReplicas                = 1
+dxPeriod                 = 0.2
+dyPeriod                 = 0.2
+dzPeriod                 = 2.0
+
+# time stepping
+iOutInterval             = 5000 # 10
+nSteps                   = 500 # 1000
+dDelta                   = 0.0005
+
+# Dust
+dDustSize              = 1.0
+dDustGrainDensity              = 0.0011283791671
+
+# SPH
+dConstGamma              = 1.66666667
+dMeanMolWeight           = 1
+dConstAlpha              = 1.0
+dConstBeta               = 2
+nSmooth                  = 6
+
+# Other
+bDoDensity               = 0
+bDoGas                   = 1
+bDoGravity               = 0
+bFastGas                 = 1
+bGasAdiabatic            = 1
+bGasIsothermal           = 0
+bKDK                     = 1
+bParaRead                = 1
+bParaWrite               = 0
+bPeriodic                = 1
+bStandard                = 1
+bVDetails                = 1
+bViscosityLimiter        = 1
+dEta                     = 0.2
+dEtaCourant              = 0.3
+dExtraStore              = 0.5
+dFracFastGas             = 0.1
+dTheta                   = 0.7
+iCheckInterval           = 500000
+iLogInterval             = 1
+iMaxRung                 = 30
