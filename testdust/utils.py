@@ -206,6 +206,11 @@ def loadDefaultParam(defaults, userdefaults):
     params : dict
         A dictionary of the params
     """
+    # Sanity checks first
+    if not os.path.exists(defaults) or not os.path.isfile(defaults):
+        raise IOError, "could not find regular file: {}".format(defaults)
+    if not os.path.exists(userdefaults) or not os.path.isfile(userdefaults):
+        raise IOError, "could not find regular file: {}".format(userdefaults)    
     print 'Loading defaults from:', defaults
     defaults = diskpy.utils.configparser(defaults, 'param')
     print 'Loading user defaults from:', userdefaults
