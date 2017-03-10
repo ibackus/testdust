@@ -1,0 +1,51 @@
+# Period boundary conditions parameters
+bPeriodic = 1
+nReplicas = 1
+bDoGravity      = 0
+
+# It's important to use doubles for position/velocity, otherwise the gradients
+# in the initial conditions don't get captured properly
+bDoublePos          = 1
+bDoubleVel          = 1
+
+# Filenames
+achInFile                = wave.std # Initial conditions
+achOutName               = wave     # file prefix
+
+# Units
+dKpcUnit                 = 1e-5
+dMsolUnit                = 1
+
+# Time stepping parameters
+# Note for PL15, cs = L = 1, so period = 1
+iOutInterval             = 10
+nSteps                   = 450
+dDelta                   = 1e-2
+iLogInterval             = 1
+iCheckInterval           = 500000
+
+# SPH
+bDoDensity               = 0
+bDoGas                   = 1
+bGasAdiabatic            = 1
+bGasIsothermal           = 0
+bKDK                     = 1
+bParaRead                = 1
+bParaWrite               = 0
+bStandard                = 1
+bVDetails                = 1
+bViscosityLimiter        = 1 # 
+dConstBeta               = 0 # (usually 2, but 0 for this test)
+dConstAlpha              = 0.0 # (usually 1, but 0 for this test)
+
+# SPH parameters
+dConstGamma              = 1.66666666667 #5/3
+dMeanMolWeight           = 1
+dEta                     = 0.2
+dEtaCourant              = 0.3
+dExtraStore              = 0.5
+dFracFastGas             = 0.1
+dTheta                   = 0.7
+iMaxRung                 = 30
+
+
