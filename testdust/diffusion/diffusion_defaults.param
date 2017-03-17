@@ -1,0 +1,54 @@
+#
+# DO NOT CHANGE THIS FILE.  Instead, add params to diffusion_user_defaults.param
+# to override this params
+# 
+# Generic defaults param for reproducing the diffusion test of 
+# Price & Laibe (2015).  
+# This set up to run until t=10, with snapshots output every t=0.1
+
+bPeriodic = 1
+
+# Filenames
+achInFile                = snapshot.std # Initial conditions
+achOutName               = snapshot     # file prefix
+
+# flags for dust
+bFastGas                 = 1   # fastGas is not implemented for dust, but should work
+dDustSize              = 1.  # grain size
+dDustGrainDensity              = 1.  # grain density
+
+# Units (pretty much arbitrary)
+dKpcUnit                 = 1e-5
+dMeanMolWeight           = 2
+dMsolUnit                = 1
+
+# Time stepping parameters
+iOutInterval             = 40
+nSteps                   = 4000
+dDelta                   = 0.0025
+iLogInterval             = 1
+iCheckInterval           = 500
+
+# Flags for SPH + grav
+bDoGravity               = 0    # For this test, do not calculate gravity
+bDoDensity               = 0
+bDoGas                   = 1
+bGasAdiabatic            = 0
+bGasIsothermal           = 1
+bKDK                     = 1
+bParaRead                = 1  # TEST (usually 1)
+bParaWrite               = 0  # TEST (usually 0)
+bStandard                = 1
+bVDetails                = 1
+bViscosityLimiter        = 1
+
+# Basic parameters
+dConstGamma              = 1.4
+dEta                     = 0.2
+dEtaCourant              = 0.3
+dExtraStore              = 0.5
+dFracFastGas             = 0.1
+dTheta                   = 0.7
+iMaxRung                 = 30
+
+

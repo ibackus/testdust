@@ -4,6 +4,7 @@ Created on Wed Oct 19 15:39:07 2016
 
 @author: ibackus
 """
+import itertools
 import diskpy
 import glob
 import os
@@ -14,6 +15,111 @@ import pynbody
 SimArray = pynbody.array.SimArray
 
 kB = SimArray(1.0, 'k')
+
+
+def scaleTimeStep(param, scale=1):
+    """
+    Rescales the time-step for a simulation.  This is useful if you want to,
+    for instance, double the dDelta but force all the outputs to be at the same
+    physical time
+    
+    Parameters
+    ----------
+    param : dict
+        A param dictionary (see diskpy.utils.configparser)
+    scale : number
+        Factor by which to scale dDelta.  dDelta_new = dDelta * scale, and all
+        outputs will be made at the same physical time (or as close to it as
+        possible, based on rounding)
+    """
+    scale = float(scale)
+    key = 'dDelta'
+    if key in param:        
+        param[key] *= scale
+        
+    key = 'iOutInterval'
+    if key in param:
+        val = param[key]
+        val = np.round(val/scale).astype(int)
+        val = max([1, val])
+        param[key] = val
+        
+    key = 'nSteps'
+    if key in param:
+        val = param[key]
+        if val > 0:
+            val = np.round(val/scale).astype(int)
+            val = max([1, val])
+            param[key] = val
+        
+    key = 'iLogInterval'
+    if key in param:
+        val = param[key]
+        val = np.round(val/scale).astype(int)
+        val = max([1, val])
+        param[key] = val
+        
+    key = 'iCheckInterval'
+    if key in param:
+        val = param[key]
+        val = np.round(val/scale).astype(int)
+        val = max([1, val])
+        param[key] = val
+             
+    key = 'dDumpFrameStep'
+    if key in param:
+        val = param[key]
+        param[key] = val/scale
+
+
+def periodicGrid(res, shape=[1,1,1]):
+    """
+    Generates an ND grid in a periodic box of a given shape, centered on the
+    origin.
+    
+    Parameters
+    ----------
+    res: float or array-like
+        Number of grid points along each axis.  If an integer, the resolution
+        will be the same along each axis.
+    shape: array-like
+        Size of the grid along each axis.  number of dimensions is defined by
+        len(shape)
+    
+    Returns
+    -------
+    x: array
+        Array of positions.  x[i] is a vector of the nD position of point i.
+    """
+    shape = np.asarray(shape).astype(float)
+    ndim = len(shape)
+    if ndim == 0:
+        # Assume we're trying to do 1D
+        shape = shape[None]
+        ndim = 1
+    res = np.asarray(res).astype(int)
+    if res.size == 1:
+        # Use same res along each axis
+        res = res * np.ones(ndim, dtype=int)
+    if len(res) != ndim:
+        raise ValueError, "Shape mismatch with res and shape"
+    edges = []
+    
+    for i in range(ndim):
+        
+        dx = shape[i]/res[i]
+        xmax = (shape[i]-dx)/2.
+        edge = np.linspace(-xmax, xmax, res[i])
+        edges.append(edge)
+        
+    npoints = np.product(res)
+    pos = np.zeros([npoints, ndim])
+    
+    for i, x in enumerate(itertools.product(*edges)):
+        
+        pos[i] = x
+        
+    return pos
 
 def calcGasVals(f, param={}):
     """

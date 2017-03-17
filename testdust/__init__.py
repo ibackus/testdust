@@ -8,3 +8,4 @@ import utils
 import settling
 import shock
 import wave
+import diffusion
