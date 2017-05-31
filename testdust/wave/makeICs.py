@@ -60,6 +60,9 @@ def wave1d(rho0=1., dustFrac0=0.5, drho=1e-4, v0=1e-4, gamma=5./3, cs=1.,
                 [1 + (\delta\rho/2) \sin{(2 \pi N z/L)}]
         
     Which makes a wave moving to the right at the speed of sound :math:`c_s`.
+    The pressure perturbation is derived from the density and velocity 
+    perturbations using the momentum equation and assuming sinewaves travelling
+    to the right at cs
     
     Parameters
     ----------
