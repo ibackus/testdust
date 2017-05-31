@@ -69,6 +69,40 @@ kB = SimArray(1.0, 'k')
 G = SimArray(1.0, 'G')
 Msol = SimArray(1.0, 'Msol')
 
+def makeICs(settingsfile, savedir='settling-test'):
+    """
+    Generates settling test ICs using the IC class.
+    
+    ICs are generated from settings stored in a python settings file.  For an 
+    example settings file, look at testdust/settling/settings.py
+    """
+    ics = IC(settingsfile)
+    # Its a good idea to generate these ICs in their own folder
+    if not os.path.exists(savedir):
+        
+        os.mkdir(savedir)
+    
+    cwd = os.getcwd()
+    
+    try:
+        
+        os.chdir(savedir)
+        # Generate initial snapshot
+        ics.makeInitialSnap()
+        # Settle the ICs
+        ics.setupGas()
+        ics.settleGas()
+        # Set up the dust
+        ics.setupDust()
+        
+        print 'Successfully made dust settling test ICs!'
+        print 'Saved to directory:', savedir
+    
+    finally:
+        
+        os.chdir(cwd)
+
+
 class IC():
     """
     IC(self, settingsFileName)
