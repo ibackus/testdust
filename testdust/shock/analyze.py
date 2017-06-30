@@ -101,6 +101,9 @@ def plotPriceLaibe(f, paramname, t=None, left_state=(1, 1, 0),
     for i in (0, 1):
         axs[i].tick_params(axis='x', which='both', bottom='off', 
            labelbottom='off')
+    
+    for i in (2, 3):
+        axs[i].set_xlabel('z')
 
     plt.xlim(-0.5, 0.5)
     plt.tight_layout()
