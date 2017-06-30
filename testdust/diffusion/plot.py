@@ -60,7 +60,8 @@ def crossSection(sim, ts, crossSectionTimes=[0, 1, 10]):
     'See Price & Laibe (2015)')
 
 def dustFracProfile(sim, ts, epsEstimator, 
-                    epsPlotTimes=[0., 0.1, 0.3, 1, 3, 10], nr=200):
+                    epsPlotTimes=[0., 0.1, 0.3, 1, 3, 10], nr=200,
+                    colorcode=True, legend=True):
     """
     Note, sim and ts and epsEstimator can be loaded with analyze.loadSim(...)
     
@@ -86,6 +87,11 @@ def dustFracProfile(sim, ts, epsEstimator,
     actualPlotTimes = np.zeros(nt)
     title = 'plot times: '
     
+    if colorcode:
+        markercolor = None
+    else:
+        markercolor = 'k'
+    
     for iPlot in range(nt):
         
         iTime = abs(ts - epsPlotTimes[iPlot]).argmin()
@@ -100,10 +106,12 @@ def dustFracProfile(sim, ts, epsEstimator,
         
         # Plot
         scatter=plt.plot(f['r'], f['dustFrac'], 'o', markersize=3, 
-                 markeredgecolor='none', label='t={:.2g}'.format(float(t)))
+                 markeredgecolor='none', label='t={:.2g}'.format(float(t)),
+                 color=markercolor)
         line=plt.plot(r, epsAnalytic, 'r')
-        # Make lines and points the same color
-        line[0].set_color(scatter[0].get_color())
+        if colorcode:
+            # Make lines and points the same color
+            line[0].set_color(scatter[0].get_color())
         title += '{:.2g}, '.format(float(t))
         
     # Set-up plot
@@ -111,7 +119,7 @@ def dustFracProfile(sim, ts, epsEstimator,
     plt.xlim(0, 0.5)
     plt.ylabel('Dust fraction')
     plt.xlabel('r')
-    plt.legend(loc='best', markerscale=2)
-    title += '\ncompare to Price & Laibe (2015) figure 4'
+    if legend:
+        plt.legend(loc='best', markerscale=2)
     plt.title(title)
     
