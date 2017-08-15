@@ -291,7 +291,7 @@ class IC():
         if changaPreset is None:
             changaPreset = x['changaPreset']
         if nRuns is None:
-            nRuns = x['nRuns']
+            nRuns = x.get('nRuns', 1)
         plot = x.get('plot', False)
         output = settleGas(changaPreset, nRuns, plot)
         return output
