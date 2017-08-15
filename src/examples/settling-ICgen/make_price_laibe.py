@@ -15,6 +15,9 @@ and restart from where you left off.
 To Generate these ICs, ChaNGa MUST be compiled with the glass damping option 
 (i.e. the damping force, proportional to the velocity)
 
+There are several example settingsfiles, check them out.  They define the
+settling ICs to generate.
+
 Code units are specified in PL15
 
 Created on Fri Oct 21 17:07:56 2016
@@ -26,10 +29,15 @@ import os
 
 # It's a good idea to generate the ICs in a clean folder
 savedir = 'dust-settling'
+
 # IC settings are stored in this file
-settingsfile = 'settings_hexagonal.py'
+settingsfile = 'settings_hexagonal.py' # PL15 test (stretched hexagonal lattice)
+#settingsfile = 'settings_randomnormal_3d.py' # 3D Glass
+#settingsfile = 'settings_cubic_grid.py' # Stretched cubic lattice
+
 # Initialize the ICs with the settings
 IC = testdust.settling.makeICs.IC(settingsfile)
+
 # Its a good idea to generate these ICs in their own folder
 if not os.path.exists(savedir):
     
