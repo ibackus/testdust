@@ -61,7 +61,7 @@ def crossSection(sim, ts, crossSectionTimes=[0, 1, 10]):
 
 def dustFracProfile(sim, ts, epsEstimator, 
                     epsPlotTimes=[0., 0.1, 0.3, 1, 3, 10], nr=200,
-                    colorcode=True, legend=True):
+                    colorcode=True, legend=True, rasterized=True):
     """
     Note, sim and ts and epsEstimator can be loaded with analyze.loadSim(...)
     
@@ -78,6 +78,12 @@ def dustFracProfile(sim, ts, epsEstimator,
         Approximate times to plot at
     nr : int
         Number of radial bins
+    colorcode : bool
+        Color-code the times
+    legend : bool
+        Display legend
+    rasterized : bool
+        Rasterize the dots.  Useful for saving figures as vector graphics
     """
     # Make plot times an array
     epsPlotTimes = np.asarray(epsPlotTimes)
@@ -107,7 +113,7 @@ def dustFracProfile(sim, ts, epsEstimator,
         # Plot
         scatter=plt.plot(f['r'], f['dustFrac'], 'o', markersize=3, 
                  markeredgecolor='none', label='t={:.2g}'.format(float(t)),
-                 color=markercolor)
+                 color=markercolor, rasterized=rasterized)
         line=plt.plot(r, epsAnalytic, 'r')
         if colorcode:
             # Make lines and points the same color
