@@ -459,6 +459,7 @@ def setupGas(filename, height, cs, dDelta, boxshape, rho0, smooth,
     gasparam['nSteps'] = nSteps
     gasparam['iOutInterval'] = nSteps + 1
     gasparam['iCheckInterval'] = nSteps + 1
+    gasparam['dMeanMolWeight'] = float(molecularWeight.in_units('m_p'))
     # Set up ICs
     units = diskpy.pychanga.units_from_param(gasparam)
     v_unit = units['l_unit']/units['t_unit']
